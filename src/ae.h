@@ -71,12 +71,16 @@ typedef void aeBeforeSleepProc(struct aeEventLoop *eventLoop);
 /* File event structure */
 typedef struct aeFileEvent {
     int mask; /* one of AE_(READABLE|WRITABLE|BARRIER) */
+    // 读事件处理函数指针，在文件事件创建的时候被赋值，参见ae.c中的aeCreateFileEvent函数
     aeFileProc *rfileProc;
+    // 写事件处理函数指针，在文件事件创建的时候被赋值，参见ae.c中的aeCreateFileEvent函数
     aeFileProc *wfileProc;
     void *clientData;
 } aeFileEvent;
 
-/* Time event structure */
+/* Time event structure
+ * 时间事件分为两种：定时事件（每隔一段时间执行一次）和非定时事件（只会在某个时间点执行一次）
+ */
 typedef struct aeTimeEvent {
     long long id; /* time event identifier. */
     monotime when;
@@ -91,6 +95,7 @@ typedef struct aeTimeEvent {
 
 /* A fired event */
 typedef struct aeFiredEvent {
+    // 所有文件事件数组的索引
     int fd;
     int mask;
 } aeFiredEvent;
@@ -100,8 +105,12 @@ typedef struct aeEventLoop {
     int maxfd;   /* highest file descriptor currently registered */
     int setsize; /* max number of file descriptors tracked */
     long long timeEventNextId;
+    // 所有已注册(或监听)的文件事件，数组
     aeFileEvent *events; /* Registered events */
+    // 待处理的文件事件，数组
+    // 它是上面事件的一个子集
     aeFiredEvent *fired; /* Fired events */
+    // 所有已注册的时间事件，链表
     aeTimeEvent *timeEventHead;
     int stop;
     void *apidata; /* This is used for polling API specific data */
